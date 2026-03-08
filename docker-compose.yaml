@@ -1,0 +1,39 @@
+services:
+  markitos-it-svc-articles-postgres:
+    image: postgres:17-alpine
+    container_name: markitos-it-svc-articles-postgres
+    command: ["postgres", "-p", "55434"]
+    environment:
+      POSTGRES_USER: markitos-it-svc-articles
+      POSTGRES_PASSWORD: markitos-it-svc-articles
+      POSTGRES_DB: markitos-it-svc-articles
+    ports:
+      - "55434:55434"
+    volumes:
+      - markitos-it-svc-articles-postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U markitos-it-svc-articles -d markitos-it-svc-articles -p 55434"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  markitos-it-svc-articles:
+    build: .
+    container_name: markitos-it-svc-articles
+    environment:
+      GRPC_PORT: "3000"
+      GRPC_TLS_ENABLED: "false"
+      DB_HOST: markitos-it-svc-articles-postgres
+      DB_PORT: "55434"
+      DB_USER: markitos-it-svc-articles
+      DB_PASS: markitos-it-svc-articles
+      DB_NAME: markitos-it-svc-articles
+    ports:
+      - "3004:3000"
+    depends_on:
+      markitos-it-svc-articles-postgres:
+        condition: service_healthy
+
+volumes:
+  markitos-it-svc-articles-postgres_data:
+    driver: local
